@@ -29,17 +29,17 @@ class CostumerController extends Controller
     {
         // Validasi input dari form
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', 'not_regex:/[-]/'],
             'email' => 'required|email|unique:customers,email',
-            'phone' => 'required|string|max:15',
-            'address' => 'required|string',
+            'phone' => ['required', 'regex:/^[0-9]+$/', 'min:5', 'max:15'],
+            'address' => ['required', 'string', 'not_regex:/[-]/'],
         ]);
 
         // Menyimpan data pelanggan baru ke database
         Customer::create($request->all());
 
         // Redirect ke halaman daftar pelanggan dengan pesan sukses
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
+        return redirect()->route('customers.index')->with('success', 'Customer added successfully.');
     }
 
     // Menampilkan form untuk mengedit pelanggan (Edit)
@@ -57,10 +57,10 @@ class CostumerController extends Controller
     {
         // Validasi input dari form
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', 'not_regex:/[-]/'],
             'email' => 'required|email|unique:customers,email,' . $id,
-            'phone' => 'required|string|max:15',
-            'address' => 'required|string',
+            'phone' => ['required', 'regex:/^[0-9]+$/', 'max:15'],
+            'address' => ['required', 'string', 'not_regex:/[-]/'],
         ]);
 
         // Cari pelanggan berdasarkan ID
@@ -70,7 +70,7 @@ class CostumerController extends Controller
         $customer->update($request->all());
 
         // Redirect ke halaman daftar pelanggan dengan pesan sukses
-        return redirect()->route('customers.index')->with('success', 'Data pelanggan berhasil diupdate.');
+        return redirect()->route('customers.index')->with('success', 'Customer data has been updated successfully.');
     }
 
     // Menghapus pelanggan dari database (Delete)
@@ -83,6 +83,6 @@ class CostumerController extends Controller
         $customer->delete();
 
         // Redirect ke halaman daftar pelanggan dengan pesan sukses
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil dihapus.');
+        return redirect()->route('customers.index')->with('success', 'Customer successfully deleted.');
     }
 }

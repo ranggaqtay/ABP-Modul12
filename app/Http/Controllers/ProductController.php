@@ -8,88 +8,126 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // Menampilkan daftar produk (Read)
+    // Display a paginated list of products
     public function index()
     {
-        // Mengambil semua produk dari database dan mem-paginate 10 data per halaman
+        // Retrieve all products with their related category, paginated by 10
         $products = Product::with('category')->paginate(10);
 
-        // Return view dengan data produk
+        // Return the product index view
         return view('products.index', compact('products'));
     }
 
-    // Menampilkan form untuk membuat produk baru (Create)
+    // Show the form for creating a new product
     public function create()
     {
-        // Mengambil semua kategori untuk ditampilkan pada form select
+        // Retrieve all categories to populate the select input
         $categories = Category::all();
 
-        // Return view untuk menampilkan form
+        // Return the create view with category data
         return view('products.create', compact('categories'));
     }
 
-    // Menyimpan data produk baru ke database (Store)
+    // Store a newly created product in the database
     public function store(Request $request)
     {
-        // Validasi data yang dikirimkan dari form
+        // Validate the form input
         $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^(?![-\s]*$).+$/'
+            ],
+            'description' => [
+                'required',
+                'string',
+                'regex:/^(?![-\s]*$).+$/'
+            ],
+            'price' => 'required|numeric|gt:0',
             'category_id' => 'required|exists:categories,id',
+        ], [
+            'name.required' => 'Product name is required.',
+            'name.regex' => 'Product name cannot contain only spaces or hyphens.',
+            'description.required' => 'Product description is required.',
+            'description.regex' => 'Description cannot contain only spaces or hyphens.',
+            'price.required' => 'Product price is required.',
+            'price.numeric' => 'Price must be a number.',
+            'price.gt' => 'Price must be greater than 0.',
+            'category_id.required' => 'Category must be selected.',
+            'category_id.exists' => 'The selected category is invalid.',
         ]);
 
-        // Menyimpan produk baru ke database
+        // Create the product
         Product::create($request->all());
 
-        // Redirect ke halaman daftar produk dengan pesan sukses
-        return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
+        // Redirect with a success message
+        return redirect()->route('products.index')->with('success', 'Product has been successfully added.');
     }
 
-    // Menampilkan form untuk mengedit produk yang ada (Edit)
+    // Show the form for editing the specified product
     public function edit($id)
     {
-        // Cari produk berdasarkan ID
+        // Find the product by ID or throw 404
         $product = Product::findOrFail($id);
 
-        // Ambil semua kategori untuk form select
+        // Retrieve all categories
         $categories = Category::all();
 
-        // Return view dengan data produk yang akan di-edit
+        // Return the edit view with product and category data
         return view('products.edit', compact('product', 'categories'));
     }
 
-    // Memperbarui data produk di database (Update)
+    // Update the specified product in the database
     public function update(Request $request, $id)
     {
-        // Validasi data dari form
+        // Validate the form input
         $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^(?![-\s]*$).+$/'
+            ],
+            'description' => [
+                'required',
+                'string',
+                'regex:/^(?![-\s]*$).+$/'
+            ],
+            'price' => 'required|numeric|gt:0',
             'category_id' => 'required|exists:categories,id',
+        ], [
+            'name.required' => 'Product name is required.',
+            'name.regex' => 'Product name cannot contain only spaces or hyphens.',
+            'description.required' => 'Product description is required.',
+            'description.regex' => 'Description cannot contain only spaces or hyphens.',
+            'price.required' => 'Product price is required.',
+            'price.numeric' => 'Price must be a number.',
+            'price.gt' => 'Price must be greater than 0.',
+            'category_id.required' => 'Category must be selected.',
+            'category_id.exists' => 'The selected category is invalid.',
         ]);
 
-        // Cari produk berdasarkan ID
+        // Find the product by ID or throw 404
         $product = Product::findOrFail($id);
 
-        // Update produk di database
+        // Update the product
         $product->update($request->all());
 
-        // Redirect ke halaman daftar produk dengan pesan sukses
-        return redirect()->route('products.index')->with('success', 'Produk berhasil diupdate.');
+        // Redirect with a success message
+        return redirect()->route('products.index')->with('success', 'Product has been successfully updated.');
     }
 
-    // Menghapus produk dari database (Delete)
+    // Delete the specified product from the database
     public function destroy($id)
     {
-        // Cari produk berdasarkan ID
+        // Find the product by ID or throw 404
         $product = Product::findOrFail($id);
 
-        // Hapus produk dari database
+        // Delete the product
         $product->delete();
 
-        // Redirect ke halaman daftar produk dengan pesan sukses
-        return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
+        // Redirect with a success message
+        return redirect()->route('products.index')->with('success', 'Product has been successfully deleted.');
     }
 }

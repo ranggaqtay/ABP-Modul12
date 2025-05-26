@@ -9,90 +9,108 @@ use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    // Menampilkan daftar transaksi (Read)
+    // Display a list of transactions (Read)
     public function index()
     {
-        // Mengambil semua data transaksi beserta relasi ke customer dan produk
+        // Retrieve all transactions with related customer and product data
         $transactions = Transaction::with(['customer', 'product'])->paginate(10);
 
-        // Return view dengan data transaksi
+        // Return the view with the transaction data
         return view('transactions.index', compact('transactions'));
     }
 
-    // Menampilkan form untuk membuat transaksi baru (Create)
+    // Show the form to create a new transaction (Create)
     public function create()
     {
-        // Mengambil semua customer dan product untuk form select
+        // Retrieve all customers and products for the select form
         $customers = Customer::all();
         $products = Product::all();
 
-        // Return view untuk menampilkan form
+        // Return the view to display the form
         return view('transactions.create', compact('customers', 'products'));
     }
 
-    // Menyimpan data transaksi baru ke database (Store)
+    // Store a new transaction in the database (Store)
     public function store(Request $request)
     {
-        // Validasi input dari form
+        // Validate form input
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'product_id' => 'required|exists:products,id',
-            'total_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1',
             'transaction_date' => 'required|date',
         ]);
 
-        // Menyimpan transaksi baru ke database
-        Transaction::create($request->all());
+        // Calculate the total price
+        $product = Product::findOrFail($request->product_id);
+        $totalPrice = $product->price * $request->quantity;
 
-        // Redirect ke halaman daftar transaksi dengan pesan sukses
-        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil ditambahkan.');
+        // Save the transaction to the database
+        Transaction::create([
+            'customer_id' => $request->customer_id,
+            'product_id' => $request->product_id,
+            'total_price' => $totalPrice,
+            'transaction_date' => $request->transaction_date,
+        ]);
+
+        // Redirect to the transaction list with a success message
+        return redirect()->route('transactions.index')->with('success', 'Transaction successfully added.');
     }
 
-    // Menampilkan form untuk mengedit transaksi yang ada (Edit)
+    // Show the form to edit an existing transaction (Edit)
     public function edit($id)
     {
-        // Cari transaksi berdasarkan ID
+        // Find the transaction by ID
         $transaction = Transaction::findOrFail($id);
 
-        // Ambil semua customer dan product untuk form select
+        // Retrieve all customers and products for the select form
         $customers = Customer::all();
         $products = Product::all();
 
-        // Return view untuk mengedit transaksi
+        // Return the view to edit the transaction
         return view('transactions.edit', compact('transaction', 'customers', 'products'));
     }
 
-    // Memperbarui data transaksi di database (Update)
+    // Update an existing transaction in the database (Update)
     public function update(Request $request, $id)
     {
-        // Validasi input dari form
+        // Validate form input
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'product_id' => 'required|exists:products,id',
-            'total_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1',
             'transaction_date' => 'required|date',
         ]);
 
-        // Cari transaksi berdasarkan ID
+        // Calculate the total price
+        $product = Product::findOrFail($request->product_id);
+        $totalPrice = $product->price * $request->quantity;
+
+        // Find the transaction by ID
         $transaction = Transaction::findOrFail($id);
 
-        // Update data transaksi di database
-        $transaction->update($request->all());
+        // Update the transaction in the database
+        $transaction->update([
+            'customer_id' => $request->customer_id,
+            'product_id' => $request->product_id,
+            'total_price' => $totalPrice,
+            'transaction_date' => $request->transaction_date,
+        ]);
 
-        // Redirect ke halaman daftar transaksi dengan pesan sukses
-        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil diupdate.');
+        // Redirect to the transaction list with a success message
+        return redirect()->route('transactions.index')->with('success', 'Transaction successfully updated.');
     }
 
-    // Menghapus transaksi dari database (Delete)
+    // Delete a transaction from the database (Delete)
     public function destroy($id)
     {
-        // Cari transaksi berdasarkan ID
+        // Find the transaction by ID
         $transaction = Transaction::findOrFail($id);
 
-        // Hapus transaksi dari database
+        // Delete the transaction from the database
         $transaction->delete();
 
-        // Redirect ke halaman daftar transaksi dengan pesan sukses
-        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil dihapus.');
+        // Redirect to the transaction list with a success message
+        return redirect()->route('transactions.index')->with('success', 'Transaction successfully deleted.');
     }
 }
